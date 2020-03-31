@@ -14,3 +14,5 @@ gem "activerecord", "~> 6.0"
 gem "byebug", "~> 11.1"
 
 gem "nokogiri", "~> 1.10"
+
+gem "rubocop", "~> 0.80.1"
