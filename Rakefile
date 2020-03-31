@@ -1,6 +1,6 @@
 require "open3"
 
-VERSIONS= %w(
+VERSIONS = %w(
   2019.3
   2019.2
   2019.1
@@ -13,7 +13,7 @@ VERSIONS= %w(
   2017.2
   2017.1
   5.6
-)
+).freeze
 
 def version
   @version ||= begin
@@ -33,7 +33,7 @@ end
 def run(*args)
   o, e, s = Open3.capture3(*args)
   unless s.success?
-    $stderr.puts e
+    warn e
     exit s.to_i
   end
   o
@@ -74,6 +74,7 @@ end
 
 task "add_original_url" => "src" do
   next if File.read("src/#{version}/Manual/index.html")[%(<html class="no-js" lang="ja"><!-- Online page at https://docs.unity3d.com/ja/#{version}/Manual/index.html -->)]
+
   ruby "scripts/add_original_url.rb #{version}"
 end
 

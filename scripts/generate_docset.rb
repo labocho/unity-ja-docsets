@@ -34,7 +34,7 @@ class Generator
   end
 
   def generate_plist
-    open("#{docset}/Contents/Info.plist", "w") do |f|
+    File.open("#{docset}/Contents/Info.plist", "w") do |f|
       f.write <<~XML
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -61,7 +61,7 @@ class Generator
 
     ActiveRecord::Base.establish_connection(
       adapter: "sqlite3",
-      database: "#{docset}/Contents/Resources/docSet.dsidx"
+      database: "#{docset}/Contents/Resources/docSet.dsidx",
     )
 
     ActiveRecord::Base.connection.execute <<-SQL
@@ -69,7 +69,6 @@ class Generator
     SQL
   end
 end
-
 
 class ScriptReferenceIndexer
   def create_index
@@ -93,7 +92,7 @@ class ScriptReferenceIndexer
       print "."
 
       doc = Nokogiri.parse(i.html)
-      unless type_description = doc.css(".cl.mb0.left.mr10").first
+      unless (type_description = doc.css(".cl.mb0.left.mr10").first)
         warn "Type description not found: #{i.path}"
         next
       end
@@ -124,17 +123,17 @@ class ScriptReferenceIndexer
   end
 
   def index_section(index, doc, title, type)
-    if (h2 = doc.css("h2").find {|e| e.text == title })
-      table = h2.next_element
-      table.css("td.lbl a").each do |a|
-        name = index.name + "." + a.text
-        path = "ScriptReference/#{a["href"]}"
-        SearchIndex.create!(
-          name: name,
-          type: type,
-          path: path,
-        )
-      end
+    return unless (h2 = doc.css("h2").find {|e| e.text == title })
+
+    table = h2.next_element
+    table.css("td.lbl a").each do |a|
+      name = index.name + "." + a.text
+      path = "ScriptReference/#{a["href"]}"
+      SearchIndex.create!(
+        name: name,
+        type: type,
+        path: path,
+      )
     end
   end
 
@@ -197,7 +196,7 @@ class ManualIndexer
 
   def create_index_by_toc
     root = JSON.parse(File.read("#{html_dir}/Manual/docdata/toc.json"))
-    each_child(root) do |child, parent|
+    each_child(root) do |child, _parent|
       next if child["link"] == "null"
 
       link = child["link"]
