@@ -45,6 +45,11 @@ def revision
   end
 end
 
+desc "List available versions"
+task "versions" do
+  puts VERSIONS.join("\n")
+end
+
 task "zip" do
   url = "https://storage.googleapis.com/localized_docs/ja/#{version}/UnityDocumentation.zip"
 
@@ -72,6 +77,7 @@ task "add_original_url" => "src" do
   ruby "scripts/add_original_url.rb #{version}"
 end
 
+desc "Build docset to ./docset/VERSION"
 task "docset" => "add_original_url" do
   next if File.exist?("#{docset_path}/REVISION") && File.read("#{docset_path}/REVISION").strip == revision
 
@@ -80,6 +86,7 @@ task "docset" => "add_original_url" do
   File.write("#{docset_path}/REVISION", revision)
 end
 
+desc "Build and install docset"
 task "install" => "docset" do
   dest = "#{ENV["HOME"]}/Library/Application Support/Dash/DocSets/Unity3D-#{version}-ja"
   rm_rf File.join(dest, File.basename(docset_path))
@@ -92,3 +99,5 @@ task "clean" do
   rm_rf "src"
   rm_rf "docset"
 end
+
+task "default" => "docset"
