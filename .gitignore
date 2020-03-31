@@ -1,4 +1,5 @@
 /.envrc
 /docset
 /src
+/tarball/*.tgz
 /zip

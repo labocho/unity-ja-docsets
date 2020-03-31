@@ -12,3 +12,5 @@ gem "sqlite3", "~> 1.4"
 gem "activerecord", "~> 6.0"
 
 gem "byebug", "~> 11.1"
+
+gem "aws-sdk-s3", "~> 1.61"
