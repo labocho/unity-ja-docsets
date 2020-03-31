@@ -1,7 +1,34 @@
-SRC = "https://storage.googleapis.com/localized_docs/ja/2018.4/UnityDocumentation.zip"
-VERSION = "2018.4"
+VERSIONS= %w(
+  2019.3
+  2019.2
+  2019.1
+  2018.4
+  2018.3
+  2018.2
+  2018.1
+  2017.4
+  2017.3
+  2017.2
+  2017.1
+  5.6
+)
 
 require "open3"
+
+def version
+  @version ||= begin
+    v = ENV["VERSION"].to_s
+    unless VERSIONS.include?(v)
+      warn "VERSION environment variable is not in (#{VERSIONS.join("|")})"
+      exit 1
+    end
+    v
+  end
+end
+
+def docset_path
+  @docset_path ||= "docset/Unity 3D #{version}-ja.docset"
+end
 
 def run(*args)
   o, e, s = Open3.capture3(*args)
@@ -14,48 +41,54 @@ end
 
 def revision
   @revision ||= begin
-    File.exist?("zip/REVISION") ? File.read("zip/REVISION").strip : ""
+    File.exist?("zip/#{version}/REVISION") ? File.read("zip/#{version}/REVISION").strip : ""
   end
 end
 
 task "zip" do
-  if File.exist?("zip/UnityDocumentation.zip") && File.exist?("zip/REVISION")
-    latest_etag = run("curl -I --silent #{SRC} 2>&1 | grep etag: | awk '{ print $2 }'").strip
-    current_etag = File.read("zip/REVISION").strip
+  url = "https://storage.googleapis.com/localized_docs/ja/#{version}/UnityDocumentation.zip"
+
+  if File.exist?("zip/#{version}/UnityDocumentation.zip") && File.exist?("zip/#{version}/REVISION")
+    latest_etag = run("curl -I --silent #{url} 2>&1 | grep etag: | awk '{ print $2 }'").strip
+    current_etag = File.read("zip/#{version}/REVISION").strip
     next if latest_etag == current_etag
   end
 
-  mkdir_p "zip"
-  sh "curl #{SRC} > zip/UnityDocumentation.zip"
-  sh "curl -I --silent #{SRC} 2>&1 | grep etag: | awk '{ print $2 }' > zip/REVISION"
+  mkdir_p "zip/#{version}"
+  sh "curl #{url} > zip/#{version}/UnityDocumentation.zip"
+  sh "curl -I --silent #{url} 2>&1 | grep etag: | awk '{ print $2 }' > zip/#{version}/REVISION"
 end
 
 task "src" => "zip" do
-  next if File.exist?("src/REVISION") && File.read("src/REVISION").strip == revision
+  next if File.exist?("src/#{version}/REVISION") && File.read("src/#{version}/REVISION").strip == revision
 
-  mkdir_p "src"
-  sh "unzip zip/UnityDocumentation.zip -d src"
-  File.write("src/REVISION", revision)
+  mkdir_p "src/#{version}"
+  sh "unzip zip/#{version}/UnityDocumentation.zip -d src/#{version}"
+  File.write("src/#{version}/REVISION", revision)
 end
 
 task "add_original_url" => "src" do
-  next if File.read("src/Manual/index.html")[%(<html class="no-js" lang="ja"><!-- Online page at https://docs.unity3d.com/ja/#{VERSION}/Manual/index.html -->)]
-  ruby "scripts/add_original_url.rb #{VERSION}"
+  next if File.read("src/#{version}/Manual/index.html")[%(<html class="no-js" lang="ja"><!-- Online page at https://docs.unity3d.com/ja/#{version}/Manual/index.html -->)]
+  ruby "scripts/add_original_url.rb #{version}"
 end
 
-task "docsets" => "add_original_url" do
-  # next if File.exist?("docsets/REVISION") && File.read("docsets/REVISION").strip == revision
+task "docset" => "add_original_url" do
+  next if File.exist?("#{docset_path}/REVISION") && File.read("#{docset_path}/REVISION").strip == revision
 
-  mkdir_p "docsets"
-  ruby "scripts/generate_docsets.rb #{VERSION}"
-  File.write("docsets/REVISION", revision)
+  mkdir_p docset_path
+  ruby "scripts/generate_docset.rb", docset_path, version
+  File.write("#{docset_path}/REVISION", revision)
 end
 
-task "install" => "docsets" do
-  source = "docsets/Unity 3D #{VERSION} (ja).docset"
-  dest = "#{ENV["HOME"]}/Library/Application Support/Dash/DocSets/Unity_3D-ja"
-  rm_rf File.join(dest, File.basename(source))
+task "install" => "docset" do
+  dest = "#{ENV["HOME"]}/Library/Application Support/Dash/DocSets/Unity_3D-#{version}-ja"
+  rm_rf File.join(dest, File.basename(docset_path))
   mkdir_p dest
-  cp_r source, dest
+  cp_r docset_path, dest
 end
 
+task "clean" do
+  rm_rf "zip"
+  rm_rf "src"
+  rm_rf "docset"
+end

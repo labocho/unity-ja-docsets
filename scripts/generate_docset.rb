@@ -10,9 +10,9 @@ class Generator
   include FileUtils
   attr_reader :version, :docset, :html_dir
 
-  def initialize(version)
+  def initialize(docset, version)
     @version = version
-    @docset = "docsets/Unity 3D #{version} (ja).docset"
+    @docset = docset
     @html_dir = "#{docset}/Contents/Resources/Documents"
   end
 
@@ -24,12 +24,12 @@ class Generator
   end
 
   def copy_documents
-    exit $?.exitstatus unless system("cp -R src/* #{"#{docset}/Contents/Resources/Documents".shellescape}")
+    exit $?.exitstatus unless system("cp -R src/#{version}/* #{"#{docset}/Contents/Resources/Documents".shellescape}")
     cp "#{docset}/Contents/Resources/Documents/StaticFiles/images/favicons/apple-touch-icon.png", "#{docset}/icon.png"
 
     File.write(
       "#{html_dir}/StaticFiles/css/custom.css",
-      File.read("src/StaticFiles/css/custom.css") + "\n" + File.read("assets/override.css"),
+      File.read("src/#{version}/StaticFiles/css/custom.css") + "\n" + File.read("assets/override.css"),
     )
   end
 
@@ -41,11 +41,11 @@ class Generator
         <plist version="1.0">
           <dict>
             <key>CFBundleIdentifier</key>
-            <string>Unity 3D #{version} (ja)</string>
+            <string>Unity 3D #{version}-ja</string>
             <key>CFBundleName</key>
-            <string>Unity 3D #{version} (ja)</string>
+            <string>Unity 3D #{version}-ja</string>
             <key>DocSetPlatformFamily</key>
-            <string>Unity 3D #{version} (ja)</string>
+            <string>Unity 3D #{version}-ja</string>
             <key>isDashDocset</key>
             <true/>
             <key>dashIndexFilePath</key>
@@ -242,9 +242,8 @@ class SearchIndex < ActiveRecord::Base
   end
 end
 
-version = ARGV.shift
-generator = Generator.new(version)
-# generator.prepare_database(false)
+docset, version = ARGV
+generator = Generator.new(docset, version)
 generator.generate
 SearchIndex.html_dir = generator.html_dir
 
@@ -253,5 +252,3 @@ m_indexer.create_index
 
 s_indexer = ScriptReferenceIndexer.new
 s_indexer.create_index
-# indexer.index_member
-# exit 1

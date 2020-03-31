@@ -6,7 +6,7 @@ def insert_url_after_html_tag(html, url)
   html.gsub(/(<html[^>]*>)/i){ $1 + comment }
 end
 
-Dir.chdir("src") {
+Dir.chdir("src/#{version}") {
   Find.find(".") {|file|
     next unless File.extname(file) == ".html"
     path = file[1..-1] # remove first .
