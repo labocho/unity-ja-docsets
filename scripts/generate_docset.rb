@@ -41,11 +41,11 @@ class Generator
         <plist version="1.0">
           <dict>
             <key>CFBundleIdentifier</key>
-            <string>Unity 3D #{version}-ja</string>
+            <string>Unity #{version}-ja</string>
             <key>CFBundleName</key>
-            <string>Unity 3D #{version}-ja</string>
+            <string>Unity #{version}-ja</string>
             <key>DocSetPlatformFamily</key>
-            <string>Unity 3D #{version}-ja</string>
+            <string>Unity #{version}-ja</string>
             <key>isDashDocset</key>
             <true/>
             <key>dashIndexFilePath</key>

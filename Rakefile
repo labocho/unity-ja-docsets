@@ -27,7 +27,7 @@ def version
 end
 
 def docset_path
-  @docset_path ||= "docset/Unity 3D #{version}-ja.docset"
+  @docset_path ||= "docset/Unity #{version}-ja.docset"
 end
 
 def run(*args)
@@ -88,7 +88,7 @@ end
 
 desc "Build and install docset"
 task "install" => "docset" do
-  dest = "#{ENV["HOME"]}/Library/Application Support/Dash/DocSets/Unity3D-#{version}-ja"
+  dest = "#{ENV["HOME"]}/Library/Application Support/Dash/DocSets/Unity-#{version}-ja"
   rm_rf File.join(dest, File.basename(docset_path))
   mkdir_p dest
   cp_r docset_path, dest
