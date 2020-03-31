@@ -1,0 +1,22 @@
+div.header-wrapper {
+  display: none;
+}
+
+#master-wrapper {
+  padding-top: 0;
+}
+
+#sidebar {
+  display: none;
+}
+
+#content-wrap.opened-sidebar {
+  padding-left: 0 !important;
+  width: 100% !important;
+}
+
+@media only screen and (max-width: 900px) {
+  #content-wrap {
+    margin-top: 0 !important;
+  }
+}
