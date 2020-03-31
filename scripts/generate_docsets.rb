@@ -24,7 +24,7 @@ class Generator
   end
 
   def copy_documents
-    # exit $?.exitstatus unless system("cp -R src/* #{"#{docset}/Contents/Resources/Documents".shellescape}")
+    exit $?.exitstatus unless system("cp -R src/* #{"#{docset}/Contents/Resources/Documents".shellescape}")
     cp "#{docset}/Contents/Resources/Documents/StaticFiles/images/favicons/apple-touch-icon.png", "#{docset}/icon.png"
 
     File.write(
@@ -190,6 +190,47 @@ class ScriptReferenceIndexer
   end
 end
 
+class ManualIndexer
+  def create_index
+    create_index_by_toc
+  end
+
+  def create_index_by_toc
+    root = JSON.parse(File.read("#{html_dir}/Manual/docdata/toc.json"))
+    each_child(root) do |child, parent|
+      next if child["link"] == "null"
+
+      link = child["link"]
+      path = "Manual/#{link}.html"
+
+      unless File.exist?(File.join(html_dir, path))
+        warn "Page not found: #{child["title"].inspect}"
+        next
+      end
+
+      SearchIndex.create!(
+        name: child["title"],
+        type: "Guide",
+        path: path,
+      )
+      print "."
+    end
+  end
+
+  def each_child(parent, &block)
+    return unless (children = parent["children"])
+
+    children.each do |child|
+      block.call(child, parent)
+      each_child(child, &block)
+    end
+  end
+
+  def html_dir
+    SearchIndex.html_dir
+  end
+end
+
 class SearchIndex < ActiveRecord::Base
   self.table_name = "searchIndex"
   self.inheritance_column = "active_record_type"
@@ -206,7 +247,11 @@ generator = Generator.new(version)
 # generator.prepare_database(false)
 generator.generate
 SearchIndex.html_dir = generator.html_dir
-indexer = ScriptReferenceIndexer.new
-indexer.create_index
+
+m_indexer = ManualIndexer.new
+m_indexer.create_index
+
+s_indexer = ScriptReferenceIndexer.new
+s_indexer.create_index
 # indexer.index_member
 # exit 1
