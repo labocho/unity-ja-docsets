@@ -39,7 +39,8 @@ task "src" => "zip" do
 end
 
 task "add_original_url" => "src" do
-  warn "TODO"
+  next if File.read("src/Manual/index.html")[%(<html class="no-js" lang="ja"><!-- Online page at https://docs.unity3d.com/ja/#{VERSION}/Manual/index.html -->)]
+  ruby "scripts/add_original_url.rb #{VERSION}"
 end
 
 task "docsets" => "add_original_url" do
@@ -57,3 +58,4 @@ task "install" => "docsets" do
   mkdir_p dest
   cp_r source, dest
 end
+
